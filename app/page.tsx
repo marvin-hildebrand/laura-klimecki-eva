@@ -174,8 +174,7 @@ export default function InstagramThumbnailCreator() {
                 maxWidth: 620,
               }}
             >
-              Wähle einen Post-Typ, gib einen Titel ein, markiere das Schlüsselwort. EVA generiert
-              das fertige 1080 × 1350 Instagram-Format — bereit zum Posten.
+              Wähle einen Post-Typ und gib den Titel ein. EVA generiert das fertige 1080 × 1350 Instagram-Format — bereit zum Posten.
             </p>
           </div>
 
