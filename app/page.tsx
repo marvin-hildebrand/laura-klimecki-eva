@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { CI, FONT } from '@/lib/design-tokens';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
@@ -12,20 +12,21 @@ import { FieldLabel } from '@/components/thumbnail/FieldLabel';
 import { LauraGrid, LAURA_IMAGES, imgGradient } from '@/components/thumbnail/LauraGrid';
 import { UploadZone } from '@/components/thumbnail/UploadZone';
 import { useThumbnailGenerator } from '@/hooks/useThumbnailGenerator';
+import { fetchRecentPosts } from '@/lib/supabase';
 
 // Fallback history for when Supabase is not connected
 const FALLBACK_HISTORY = [
-  { id: 'h1', type: 'value' as const, title: 'Closing in 3 Schritten', keywords: ['Closing', '3'] },
-  { id: 'h2', type: 'podcast' as const, title: 'Mindset im Sales', keywords: ['Mindset', 'Sales'] },
-  { id: 'h3', type: 'value' as const, title: 'Einwand-Behandlung 101', keywords: ['Einwand-Behandlung'] },
+  { id: 'h1', type: 'value' as const, title: 'Closing in 3 Schritten', keywords: ['3'] },
+  { id: 'h2', type: 'podcast' as const, title: 'Mindset im Sales', keywords: ['Mindset'] },
+  { id: 'h3', type: 'value' as const, title: 'Einwand-Behandlung 101', keywords: ['101'] },
   { id: 'h4', type: 'podcast' as const, title: 'Team-Performance', keywords: ['Performance'] },
 ];
 
 export default function InstagramThumbnailCreator() {
   // Form state
   const [type, setType] = useState<PostType>('value');
-  const [title, setTitle] = useState('Closing in 3 Schritten');
-  const [keywords, setKeywords] = useState<string[]>(['Closing']);
+  const [title, setTitle] = useState('');
+  const [keywords, setKeywords] = useState<string[]>([]);
   const [lauraId, setLauraId] = useState('l3');
 
   // Podcast upload state
@@ -35,8 +36,27 @@ export default function InstagramThumbnailCreator() {
   // Generated image state
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
 
+  // History state
+  const [historyPosts, setHistoryPosts] = useState(FALLBACK_HISTORY);
+
   // Thumbnail generator hook
   const { generate, isGenerating, progress, result } = useThumbnailGenerator();
+
+  // Load history posts on mount
+  useEffect(() => {
+    fetchRecentPosts(4).then((posts) => {
+      if (posts.length > 0) {
+        const mappedHistory = posts.map((post) => ({
+          id: post.id,
+          type: post.post_type,
+          title: post.title,
+          keywords: post.keyword.split(',').map((k) => k.trim()),
+          imageUrl: post.generated_image_url,
+        }));
+        setHistoryPosts(mappedHistory as any);
+      }
+    });
+  }, []);
 
   // Handle file selection for podcast
   const handleFileSelect = useCallback((file: File | null, preview: string | null) => {
@@ -78,7 +98,8 @@ export default function InstagramThumbnailCreator() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `thumbnail_${Date.now()}.jpg`;
+      const fileName = `${title.replace(/\s+/g, '-').toLowerCase()}_${Date.now()}.jpg`;
+      a.download = fileName;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -86,6 +107,11 @@ export default function InstagramThumbnailCreator() {
     } catch (error) {
       console.error('Download failed:', error);
     }
+  };
+
+  // Handle Instagram post
+  const handleInstagramPost = () => {
+    window.open('https://www.instagram.com/', '_blank');
   };
 
   // Compute preview images
@@ -285,15 +311,54 @@ export default function InstagramThumbnailCreator() {
                   </div>
                 </div>
 
-                {/* The thumbnail preview or generated image */}
+                {/* The thumbnail preview, loading state, or generated image */}
                 <div
                   style={{
                     display: 'flex',
                     justifyContent: 'center',
+                    alignItems: 'center',
                     padding: '8px 0 16px',
+                    minHeight: 440,
                   }}
                 >
-                  {generatedImageUrl ? (
+                  {isGenerating ? (
+                    <div
+                      style={{
+                        width: 337,
+                        height: 421,
+                        borderRadius: 14,
+                        background: 'linear-gradient(135deg, #345168 0%, #2A4356 100%)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 20,
+                        boxShadow:
+                          '0 24px 48px -20px rgba(30,58,95,0.35), 0 8px 24px -12px rgba(30,58,95,0.20)',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 48,
+                          height: 48,
+                          border: '3px solid rgba(255,255,255,0.2)',
+                          borderTopColor: '#fff',
+                          borderRadius: '50%',
+                          animation: 'spin 1s linear infinite',
+                        }}
+                      />
+                      <div
+                        style={{
+                          color: '#fff',
+                          fontSize: 14,
+                          fontFamily: FONT.body,
+                          fontWeight: 500,
+                        }}
+                      >
+                        {progress || 'Generiere Thumbnail...'}
+                      </div>
+                    </div>
+                  ) : generatedImageUrl ? (
                     <img
                       src={generatedImageUrl}
                       alt="Generated Thumbnail"
@@ -318,6 +383,12 @@ export default function InstagramThumbnailCreator() {
                   )}
                 </div>
 
+                <style jsx>{`
+                  @keyframes spin {
+                    to { transform: rotate(360deg); }
+                  }
+                `}</style>
+
                 <div
                   style={{
                     marginTop: 20,
@@ -332,11 +403,17 @@ export default function InstagramThumbnailCreator() {
                     icon="download"
                     style={{ flex: 1 }}
                     onClick={handleDownload}
-                    disabled={!generatedImageUrl}
+                    disabled={!generatedImageUrl || isGenerating}
                   >
                     Download JPG
                   </Button>
-                  <Button kind="primary" icon="instagram" style={{ flex: 1 }} disabled={!generatedImageUrl}>
+                  <Button
+                    kind="primary"
+                    icon="instagram"
+                    style={{ flex: 1 }}
+                    onClick={handleInstagramPost}
+                    disabled={!generatedImageUrl || isGenerating}
+                  >
                     Auf Instagram posten
                   </Button>
                 </div>
@@ -387,56 +464,70 @@ export default function InstagramThumbnailCreator() {
                     gap: 10,
                   }}
                 >
-                  {FALLBACK_HISTORY.map((h) => (
+                  {historyPosts.map((h: any) => (
                     <div
                       key={h.id}
                       style={{
                         aspectRatio: '4/5',
                         borderRadius: 8,
-                        background: CI.thumbBg,
+                        background: h.imageUrl ? 'transparent' : CI.thumbBg,
                         position: 'relative',
                         overflow: 'hidden',
                         cursor: 'pointer',
                         border: `1px solid ${CI.borderSoft}`,
                       }}
                     >
-                      <div
-                        style={{
-                          padding: '10px 10px 0',
-                          fontFamily: FONT.head,
-                          fontWeight: 800,
-                          fontSize: 9.5,
-                          lineHeight: 1.15,
-                          color: '#fff',
-                          textTransform: 'uppercase',
-                          letterSpacing: -0.1,
-                        }}
-                      >
-                        {h.title.split(' ').map((w, i) => {
-                          const hit = h.keywords.some(
-                            (k) => k.toLowerCase() === w.toLowerCase()
-                          );
-                          return (
-                            <span key={i} style={{ color: hit ? CI.thumbHL : '#fff' }}>
-                              {w}{' '}
-                            </span>
-                          );
-                        })}
-                      </div>
-                      <div
-                        style={{
-                          position: 'absolute',
-                          bottom: 6,
-                          left: 8,
-                          fontSize: 8,
-                          color: 'rgba(255,255,255,0.6)',
-                          fontFamily: FONT.body,
-                          letterSpacing: 1,
-                          textTransform: 'uppercase',
-                        }}
-                      >
-                        {h.type}
-                      </div>
+                      {h.imageUrl ? (
+                        <img
+                          src={h.imageUrl}
+                          alt={h.title}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                          }}
+                        />
+                      ) : (
+                        <>
+                          <div
+                            style={{
+                              padding: '10px 10px 0',
+                              fontFamily: FONT.head,
+                              fontWeight: 800,
+                              fontSize: 9.5,
+                              lineHeight: 1.15,
+                              color: '#fff',
+                              textTransform: 'uppercase',
+                              letterSpacing: -0.1,
+                            }}
+                          >
+                            {h.title.split(' ').map((w: string, i: number) => {
+                              const hit = h.keywords.some(
+                                (k: string) => k.toLowerCase() === w.toLowerCase()
+                              );
+                              return (
+                                <span key={i} style={{ color: hit ? CI.thumbHL : '#fff' }}>
+                                  {w}{' '}
+                                </span>
+                              );
+                            })}
+                          </div>
+                          <div
+                            style={{
+                              position: 'absolute',
+                              bottom: 6,
+                              left: 8,
+                              fontSize: 8,
+                              color: 'rgba(255,255,255,0.6)',
+                              fontFamily: FONT.body,
+                              letterSpacing: 1,
+                              textTransform: 'uppercase',
+                            }}
+                          >
+                            {h.type}
+                          </div>
+                        </>
+                      )}
                     </div>
                   ))}
                 </div>

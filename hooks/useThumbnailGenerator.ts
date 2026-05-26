@@ -94,8 +94,8 @@ export function useThumbnailGenerator() {
       const data = await response.json();
 
       if (data.success && data.imageUrl) {
-        // Update post with generated image
-        await updatePostStatus(post.id, 'ready', data.imageUrl);
+        // Update post with generated image URL
+        await updatePostStatus(post.id, 'ready', undefined, data.imageUrl);
 
         const successResult: GenerateResult = {
           success: true,
