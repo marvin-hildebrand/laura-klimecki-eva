@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { CI, FONT } from '@/lib/design-tokens';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
@@ -9,8 +9,7 @@ import { ThumbnailPreview, PostType } from '@/components/thumbnail/ThumbnailPrev
 import { TypeToggle } from '@/components/thumbnail/TypeToggle';
 import { TitleEditor } from '@/components/thumbnail/TitleEditor';
 import { FieldLabel } from '@/components/thumbnail/FieldLabel';
-import { LauraGrid, LAURA_IMAGES, imgGradient } from '@/components/thumbnail/LauraGrid';
-import { UploadZone } from '@/components/thumbnail/UploadZone';
+import { imgGradient } from '@/components/thumbnail/LauraGrid';
 import { useThumbnailGenerator } from '@/hooks/useThumbnailGenerator';
 import { fetchRecentPosts } from '@/lib/supabase';
 
@@ -27,11 +26,6 @@ export default function InstagramThumbnailCreator() {
   const [type, setType] = useState<PostType>('value');
   const [title, setTitle] = useState('');
   const [keywords, setKeywords] = useState<string[]>([]);
-  const [lauraId, setLauraId] = useState('l3');
-
-  // Podcast upload state
-  const [guestFile, setGuestFile] = useState<File | null>(null);
-  const [guestPreview, setGuestPreview] = useState<string | null>(null);
 
   // Generated image state
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
@@ -58,20 +52,14 @@ export default function InstagramThumbnailCreator() {
     });
   }, []);
 
-  // Handle file selection for podcast
-  const handleFileSelect = useCallback((file: File | null, preview: string | null) => {
-    setGuestFile(file);
-    setGuestPreview(preview);
-  }, []);
-
   // Handle generate button click
   const handleGenerate = async () => {
     const generateResult = await generate({
       postType: type,
       title,
       keywords,
-      lauraImageId: type === 'value' ? lauraId : undefined,
-      guestImageFile: type === 'podcast' ? guestFile || undefined : undefined,
+      lauraImageId: 'l3', // Default Laura image
+      guestImageFile: undefined,
     });
 
     if (generateResult.success && generateResult.imageUrl) {
@@ -115,12 +103,11 @@ export default function InstagramThumbnailCreator() {
   };
 
   // Compute preview images
-  const lauraImg = imgGradient(LAURA_IMAGES.find((l) => l.id === lauraId)?.hue || 210);
-  const podcastImg = guestPreview || (guestFile ? imgGradient(195) : null);
+  const lauraImg = imgGradient(210);
+  const podcastImg = null;
 
   // Validation
-  const isValid = title.trim().length > 0 && keywords.length > 0 &&
-    (type === 'value' || (type === 'podcast' && guestFile));
+  const isValid = title.trim().length > 0 && keywords.length > 0;
 
   return (
     <div
@@ -219,18 +206,6 @@ export default function InstagramThumbnailCreator() {
                 keywords={keywords}
                 setKeywords={setKeywords}
               />
-
-              <div style={{ marginTop: 28 }}>
-                {type === 'podcast' ? (
-                  <UploadZone
-                    file={guestFile}
-                    preview={guestPreview}
-                    onFileSelect={handleFileSelect}
-                  />
-                ) : (
-                  <LauraGrid selectedId={lauraId} setSelectedId={setLauraId} />
-                )}
-              </div>
 
               <div
                 style={{
