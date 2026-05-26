@@ -1,0 +1,439 @@
+{
+  "name": "Laura Instagram Thumbnail Creator",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "laura-instagram-thumbnail",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [0, 0],
+      "id": "webhook-laura-instagram",
+      "name": "Webhook",
+      "webhookId": "laura-instagram-thumbnail"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json || {};\n\nconst keywordsArr = Array.isArray(body.keywords)\n  ? body.keywords\n  : (body.keyword ? [body.keyword] : []);\n\nreturn {\n  json: {\n    postId: body.postId || null,\n    postType: body.postType,\n    title: (body.title || '').toString(),\n    keyword: keywordsArr.join(' ').toUpperCase(),\n    keywords: keywordsArr,\n    lauraImageId: body.lauraImageId || null,\n    guestImagePath: body.guestImagePath || null,\n    aspectRatio: '9:16',\n    resolution: '2K'\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0],
+      "id": "parse-input",
+      "name": "Parse Input"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.postType }}",
+                    "rightValue": "podcast",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Podcast"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.postType }}",
+                    "rightValue": "value",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Value"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [440, 0],
+      "id": "switch-post-type",
+      "name": "Post Type Switch"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Set source image URL and design reference for PODCAST posts\nconst parsed = $('Parse Input').item.json;\nconst supabaseUrl = 'https://bmsflpbhftguohitixjj.supabase.co';\n\n// Design references for podcast posts\nconst podcastRefs = [\n  'design-references/Podcast-Post/Bildschirmfoto 2026-05-26 um 13.27.04.png',\n  'design-references/Podcast-Post/Bildschirmfoto 2026-05-26 um 13.27.16.png',\n  'design-references/Podcast-Post/Bildschirmfoto 2026-05-26 um 13.27.37.png'\n];\n\n// Pick random design reference\nconst randomRef = podcastRefs[Math.floor(Math.random() * podcastRefs.length)];\n\nreturn {\n  json: {\n    ...parsed,\n    sourceImageUrl: `${supabaseUrl}/storage/v1/object/public/eva-images/${parsed.guestImagePath}`,\n    designReferenceUrl: `${supabaseUrl}/storage/v1/object/public/eva-images/${encodeURIComponent(randomRef).replace(/%2F/g, '/')}`\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, -120],
+      "id": "set-podcast-source",
+      "name": "Set Podcast Source URL"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://bmsflpbhftguohitixjj.supabase.co/rest/v1/laura_images",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "id", "value": "=eq.{{ $json.lauraImageId }}" },
+            { "name": "select", "value": "storage_path" }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [660, 120],
+      "id": "fetch-laura-image",
+      "name": "Fetch Laura Image Row"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Set source image URL and design reference for VALUE posts\nconst parsed = $('Parse Input').item.json;\nconst lauraData = $input.first().json;\nconst supabaseUrl = 'https://bmsflpbhftguohitixjj.supabase.co';\n\n// Get laura image path from DB response\nconst lauraPath = Array.isArray(lauraData) ? lauraData[0]?.storage_path : lauraData?.storage_path;\n\n// Design references for value posts\nconst valueRefs = [\n  'design-references/Value-Post/Bildschirmfoto 2026-05-26 um 13.26.14.png',\n  'design-references/Value-Post/Bildschirmfoto 2026-05-26 um 13.26.35.png',\n  'design-references/Value-Post/Bildschirmfoto 2026-05-26 um 13.26.47.png'\n];\n\n// Pick random design reference\nconst randomRef = valueRefs[Math.floor(Math.random() * valueRefs.length)];\n\nreturn {\n  json: {\n    ...parsed,\n    sourceImageUrl: `${supabaseUrl}/storage/v1/object/public/eva-images/${lauraPath}`,\n    designReferenceUrl: `${supabaseUrl}/storage/v1/object/public/eva-images/${encodeURIComponent(randomRef).replace(/%2F/g, '/')}`\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 120],
+      "id": "set-value-source",
+      "name": "Set Value Source URL"
+    },
+    {
+      "parameters": {
+        "modelId": { "__rl": true, "value": "gpt-4o", "mode": "list", "cachedResultName": "GPT-4o" },
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Du bist ein Visual Concept Generator für Instagram Reel Thumbnails.\n\nErstelle einen image_prompt für ein Instagram Reel Thumbnail im Format 9:16 (1080x1920px).\n\nDer Nutzer gibt dir einen Titel und ein Schlüsselwort. Du erhältst auch eine DESIGN-REFERENZ - analysiere deren Stil und übernimm ihn EXAKT.\n\n**SAFE ZONE REGEL:**\nAlle wichtigen Elemente (Gesichter, Text) müssen in der MITTLEREN 60% des Bildes sein.\n\n**STIL (aus Design-Referenz übernehmen):**\n- Farbschema exakt übernehmen\n- Text-Platzierung und Größe übernehmen\n- Layout-Struktur übernehmen\n- Lighting und Atmosphäre übernehmen\n\n**PODCAST-SPEZIFISCH:**\n- Zwei Personen aus dem Referenzbild extrahieren\n- NAHAUFNAHME: Gesichter groß, emotional\n- Laura links, Gast rechts\n\n**TEXT:**\n- KURZE Headline: Maximum 3-7 Wörter\n- SEHR GROSSE Schrift\n- Schlüsselwort hervorgehoben\n\n**OUTPUT:**\nNur den reinen Prompt-Text, max. 100 Wörter."
+            },
+            {
+              "role": "user",
+              "content": "=Titel: {{ $json.title }}\nSchlüsselwort: {{ $json.keyword }}\n\nDesign-Referenz URL: {{ $json.designReferenceUrl }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [1100, -120],
+      "id": "prompt-podcast",
+      "name": "Generate Podcast Prompt"
+    },
+    {
+      "parameters": {
+        "modelId": { "__rl": true, "value": "gpt-4o", "mode": "list", "cachedResultName": "GPT-4o" },
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Du bist ein Visual Concept Generator für Instagram Reel Thumbnails.\n\nErstelle einen image_prompt für ein Instagram Reel Thumbnail im Format 9:16 (1080x1920px).\n\nDer Nutzer gibt dir einen Titel und ein Schlüsselwort. Du erhältst auch eine DESIGN-REFERENZ - analysiere deren Stil und übernimm ihn EXAKT.\n\n**SAFE ZONE REGEL:**\nAlle wichtigen Elemente (Gesicht, Text) müssen in der MITTLEREN 60% des Bildes sein.\n\n**STIL (aus Design-Referenz übernehmen):**\n- Farbschema exakt übernehmen\n- Text-Platzierung und Größe übernehmen\n- Layout-Struktur übernehmen\n- Lighting und Atmosphäre übernehmen\n\n**VALUE-POST-SPEZIFISCH:**\n- Eine Person (Laura) aus dem Referenzbild\n- NAHAUFNAHME: Gesicht groß, emotional\n- Professionelle Pose\n\n**TEXT:**\n- KURZE Headline: Maximum 3-7 Wörter\n- SEHR GROSSE Schrift\n- Schlüsselwort hervorgehoben\n\n**OUTPUT:**\nNur den reinen Prompt-Text, max. 100 Wörter."
+            },
+            {
+              "role": "user",
+              "content": "=Titel: {{ $json.title }}\nSchlüsselwort: {{ $json.keyword }}\n\nDesign-Referenz URL: {{ $json.designReferenceUrl }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [1100, 120],
+      "id": "prompt-value",
+      "name": "Generate Value Prompt"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Combine prompt output with source images\nconst promptItem = $input.first().json;\nconst imagePrompt = promptItem?.message?.content || promptItem?.output?.[0]?.content?.[0]?.text || '';\n\n// Get the source data from the correct branch\nlet sourceData;\ntry {\n  sourceData = $('Set Podcast Source URL').item.json;\n} catch (e) {\n  sourceData = $('Set Value Source URL').item.json;\n}\n\nreturn {\n  json: {\n    postId: sourceData.postId,\n    postType: sourceData.postType,\n    title: sourceData.title,\n    keyword: sourceData.keyword,\n    sourceImageUrl: sourceData.sourceImageUrl,\n    designReferenceUrl: sourceData.designReferenceUrl,\n    imagePrompt,\n    aspectRatio: sourceData.aspectRatio,\n    resolution: sourceData.resolution\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1320, 0],
+      "id": "combine-prompt-and-image",
+      "name": "Combine Prompt & Image"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.replicate.com/v1/models/google/imagen-4/predictions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.REPLICATE_API_TOKEN }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\n  \"input\": {\n    \"prompt\": {{ JSON.stringify($json.imagePrompt) }},\n    \"image\": {{ JSON.stringify($json.sourceImageUrl) }},\n    \"style_image\": {{ JSON.stringify($json.designReferenceUrl) }},\n    \"aspect_ratio\": \"9:16\",\n    \"output_format\": \"jpg\",\n    \"safety_filter_level\": \"block_only_high\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1540, 0],
+      "id": "replicate-request",
+      "name": "Create Image (Replicate)"
+    },
+    {
+      "parameters": {
+        "amount": 45
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1760, 0],
+      "id": "wait-initial",
+      "name": "Wait 45s"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.urls.get }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.REPLICATE_API_TOKEN }}" }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1980, 0],
+      "id": "check-status",
+      "name": "Check Status"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "succeeded",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [2200, 0],
+      "id": "check-success",
+      "name": "Success?"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ Array.isArray($json.output) ? $json.output[0] : $json.output }}",
+        "options": {
+          "response": { "response": { "responseFormat": "file" } }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [2420, -120],
+      "id": "download-image",
+      "name": "Download Image"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://bmsflpbhftguohitixjj.supabase.co/storage/v1/object/eva-images/posts/{{ $('Parse Input').item.json.postId }}.jpg",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "image/jpeg" },
+            { "name": "x-upsert", "value": "true" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [2640, -120],
+      "id": "upload-to-storage",
+      "name": "Upload to Supabase Storage"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://bmsflpbhftguohitixjj.supabase.co/rest/v1/instagram_posts",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "id", "value": "=eq.{{ $('Parse Input').item.json.postId }}" }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=minimal" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\n  \"status\": \"ready\",\n  \"generated_image_storage_path\": \"posts/{{ $('Parse Input').item.json.postId }}.jpg\",\n  \"generated_image_url\": \"https://bmsflpbhftguohitixjj.supabase.co/storage/v1/object/public/eva-images/posts/{{ $('Parse Input').item.json.postId }}.jpg\",\n  \"prompt_used\": {{ JSON.stringify($('Combine Prompt & Image').item.json.imagePrompt) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [2860, -120],
+      "id": "update-post-success",
+      "name": "Mark Post Ready"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, postId: $('Parse Input').item.json.postId, imageUrl: 'https://bmsflpbhftguohitixjj.supabase.co/storage/v1/object/public/eva-images/posts/' + $('Parse Input').item.json.postId + '.jpg', status: 'ready' }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [3080, -120],
+      "id": "respond-success",
+      "name": "Respond Success"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://bmsflpbhftguohitixjj.supabase.co/rest/v1/instagram_posts",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "id", "value": "=eq.{{ $('Parse Input').item.json.postId }}" }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=minimal" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\n  \"status\": \"failed\",\n  \"error_message\": {{ JSON.stringify('Replicate status: ' + ($json.status || 'unknown') + ' / ' + ($json.error || '')) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [2420, 120],
+      "id": "update-post-failure",
+      "name": "Mark Post Failed"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, error: 'Image generation failed', status: $('Check Status').item.json.status, postId: $('Parse Input').item.json.postId }) }}",
+        "options": { "responseCode": 500 }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [2640, 120],
+      "id": "respond-error",
+      "name": "Respond Error"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Parse Input", "type": "main", "index": 0 }]]
+    },
+    "Parse Input": {
+      "main": [[{ "node": "Post Type Switch", "type": "main", "index": 0 }]]
+    },
+    "Post Type Switch": {
+      "main": [
+        [{ "node": "Set Podcast Source URL", "type": "main", "index": 0 }],
+        [{ "node": "Fetch Laura Image Row", "type": "main", "index": 0 }]
+      ]
+    },
+    "Set Podcast Source URL": {
+      "main": [[{ "node": "Generate Podcast Prompt", "type": "main", "index": 0 }]]
+    },
+    "Fetch Laura Image Row": {
+      "main": [[{ "node": "Set Value Source URL", "type": "main", "index": 0 }]]
+    },
+    "Set Value Source URL": {
+      "main": [[{ "node": "Generate Value Prompt", "type": "main", "index": 0 }]]
+    },
+    "Generate Podcast Prompt": {
+      "main": [[{ "node": "Combine Prompt & Image", "type": "main", "index": 0 }]]
+    },
+    "Generate Value Prompt": {
+      "main": [[{ "node": "Combine Prompt & Image", "type": "main", "index": 0 }]]
+    },
+    "Combine Prompt & Image": {
+      "main": [[{ "node": "Create Image (Replicate)", "type": "main", "index": 0 }]]
+    },
+    "Create Image (Replicate)": {
+      "main": [[{ "node": "Wait 45s", "type": "main", "index": 0 }]]
+    },
+    "Wait 45s": {
+      "main": [[{ "node": "Check Status", "type": "main", "index": 0 }]]
+    },
+    "Check Status": {
+      "main": [[{ "node": "Success?", "type": "main", "index": 0 }]]
+    },
+    "Success?": {
+      "main": [
+        [{ "node": "Download Image", "type": "main", "index": 0 }],
+        [{ "node": "Mark Post Failed", "type": "main", "index": 0 }]
+      ]
+    },
+    "Download Image": {
+      "main": [[{ "node": "Upload to Supabase Storage", "type": "main", "index": 0 }]]
+    },
+    "Upload to Supabase Storage": {
+      "main": [[{ "node": "Mark Post Ready", "type": "main", "index": 0 }]]
+    },
+    "Mark Post Ready": {
+      "main": [[{ "node": "Respond Success", "type": "main", "index": 0 }]]
+    },
+    "Mark Post Failed": {
+      "main": [[{ "node": "Respond Error", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

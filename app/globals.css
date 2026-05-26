@@ -1,0 +1,132 @@
+@import "tailwindcss";
+
+:root {
+  /* ═══════════════════════════════════════════════════════════
+     Laura Klimecki CI (Corporate Identity)
+     ═══════════════════════════════════════════════════════════ */
+
+  /* CI Farben */
+  --ci-blue: #345168;
+  --ci-blue-light: #f2f5f7;
+  --ci-blue-medium: #6688a4;
+  --ci-gray: #F4F4F4;
+  --ci-white: #FFFFFF;
+  --ci-beige: #beb8af;
+
+  /* ═══════════════════════════════════════════════════════════
+     EVA Interface Tokens (basierend auf CI)
+     ═══════════════════════════════════════════════════════════ */
+
+  --eva-bg: var(--ci-blue-light);
+  --eva-bg-soft: var(--ci-gray);
+  --eva-card: var(--ci-white);
+  --eva-card-deep: #f8f9fa;
+  --eva-border: #E5E7EB;
+  --eva-border-soft: #EEF1F4;
+
+  --eva-text: var(--ci-blue);
+  --eva-text-dim: var(--ci-blue-medium);
+  --eva-text-muted: #8E97A2;
+
+  --eva-blue: var(--ci-blue);
+  --eva-blue-deep: #2a4155;
+  --eva-blue-soft: rgba(52, 81, 104, 0.10);
+
+  --eva-accent: var(--ci-blue-medium);
+  --eva-accent-soft: rgba(102, 136, 164, 0.10);
+
+  --eva-success: #5A9070;
+  --eva-warning: #C29442;
+  --eva-error: #B85A5A;
+
+  /* ═══════════════════════════════════════════════════════════
+     Instagram Thumbnail Colors (spezifisch für Posts)
+     ═══════════════════════════════════════════════════════════ */
+
+  --insta-bg: #1e3a5f;
+  --insta-bg-alt: #1a2744;
+  --insta-accent: #5ba4d4;
+  --insta-text: #FFFFFF;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--eva-bg);
+  color: var(--eva-text);
+  /* Laura CI: Open Sans für Fließtext */
+  font-family: var(--font-open-sans), 'Open Sans', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Laura CI Typography Classes */
+.font-heading {
+  font-family: var(--font-lato), 'Lato', sans-serif;
+  font-weight: 700;
+}
+
+.font-body {
+  font-family: var(--font-open-sans), 'Open Sans', sans-serif;
+}
+
+.font-decorative {
+  font-family: var(--font-cormorant), 'Cormorant Garamond', serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.font-buzzword {
+  font-family: var(--font-playfair), 'Playfair Display SC', serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button {
+  font-family: inherit;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--insta-accent);
+  outline-offset: 2px;
+}
+
+textarea:focus {
+  border-color: var(--insta-accent) !important;
+  box-shadow: 0 0 0 3px rgba(91, 164, 212, 0.15);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--eva-border);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--eva-text-muted);
+}
+
+/* Pulse animation */
+@keyframes eva-pulse {
+  0% { transform: scale(1); opacity: 0.5; }
+  80% { transform: scale(2.6); opacity: 0; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+
+.animate-eva-pulse {
+  animation: eva-pulse 2.4s ease-out infinite;
+}
