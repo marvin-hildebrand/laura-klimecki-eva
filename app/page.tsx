@@ -54,10 +54,13 @@ export default function InstagramThumbnailCreator() {
 
   // Handle generate button click
   const handleGenerate = async () => {
+    // Auto-generate keywords from title (all words)
+    const autoKeywords = title.trim().split(/\s+/).filter(w => w.length > 0);
+
     const generateResult = await generate({
       postType: type,
       title,
-      keywords,
+      keywords: autoKeywords,
       lauraImageId: 'l3', // Default Laura image
       guestImageFile: undefined,
     });
@@ -104,8 +107,11 @@ export default function InstagramThumbnailCreator() {
   const lauraImg = imgGradient(210);
   const podcastImg = null;
 
+  // Auto-generate keywords for preview (use empty array, prompt handles text splitting)
+  const previewKeywords: string[] = [];
+
   // Validation
-  const isValid = title.trim().length > 0 && keywords.length > 0;
+  const isValid = title.trim().length > 0;
 
   return (
     <div
@@ -348,7 +354,7 @@ export default function InstagramThumbnailCreator() {
                     <ThumbnailPreview
                       type={type}
                       title={title}
-                      keywords={keywords}
+                      keywords={previewKeywords}
                       podcastImg={podcastImg}
                       lauraImg={lauraImg}
                       scale={0.78}
