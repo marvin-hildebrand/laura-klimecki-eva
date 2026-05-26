@@ -71,8 +71,6 @@ export default function InstagramThumbnailCreator() {
   const handleReset = () => {
     setTitle('');
     setKeywords([]);
-    setGuestFile(null);
-    setGuestPreview(null);
     setGeneratedImageUrl(null);
   };
 
