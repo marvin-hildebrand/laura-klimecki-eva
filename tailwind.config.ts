@@ -9,7 +9,25 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // EVA Design Tokens - Light Theme (Münchner Psychologin Palette)
+        // Laura Klimecki CI - Offizielle Brand Colors
+        ci: {
+          // Hauptfarben
+          blue: '#345168',           // Grundfarbe, Überschriften, Buttons
+          'blue-light': '#f2f5f7',   // Hintergründe, Cards
+          'blue-medium': '#6688a4',  // Akzente, Links, Hover
+          gray: '#F4F4F4',           // Sekundäre Hintergründe
+          white: '#FFFFFF',          // Cards, Text auf Dunkel
+          beige: '#beb8af',          // Dezente Akzente
+        },
+
+        // Instagram Thumbnail Farben
+        insta: {
+          bg: '#1e3a5f',             // Hintergrund
+          accent: '#5ba4d4',         // Schlüsselwort-Hervorhebung
+          text: '#FFFFFF',           // Restlicher Text
+        },
+
+        // EVA Design Tokens - Alternative Palette (Legacy)
         eva: {
           // Warm cream / paper canvas backgrounds
           bg: '#F3EFE6',
@@ -58,6 +76,14 @@ const config: Config = {
         },
       },
       fontFamily: {
+        // Laura CI Schriftarten
+        heading: ['Lato', 'sans-serif'],                    // Überschriften (Bold)
+        body: ['Open Sans', 'sans-serif'],                  // Fließtext
+        decorative: ['Cormorant Garamond', 'serif'],        // Ziertext (UPPERCASE)
+        buzzword: ['Playfair Display SC', 'serif'],         // Buzzwords
+        muli: ['Muli', 'Calibri Light', 'sans-serif'],      // Legacy CI
+
+        // Legacy
         sans: ['Inter', 'system-ui', 'sans-serif'],
         serif: ['Instrument Serif', 'serif'],
       },

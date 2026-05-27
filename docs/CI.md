@@ -1,5 +1,10 @@
 # Laura Klimecki — Corporate Identity
 
+> **✅ Vollständig konfiguriert**
+> Alle CI-Farben und Schriftarten sind bereits im Projekt hinterlegt und können direkt über Tailwind CSS-Klassen verwendet werden. Keine weitere Konfiguration nötig.
+
+---
+
 ## Farben
 
 ### CI Hauptfarben
@@ -57,18 +62,70 @@ Fallback (alte CI): Muli Light oder Calibri Light
 
 ## Tailwind CSS Classes
 
+### Schriftarten
+
 ```html
-<!-- Überschriften -->
-<h1 class="font-heading">...</h1>
+<!-- Überschriften (Lato Bold) -->
+<h1 class="font-heading">Leadership Coaching</h1>
 
-<!-- Fließtext -->
-<p class="font-body">...</p>
+<!-- Fließtext (Open Sans) -->
+<p class="font-body">Dein Text hier...</p>
 
-<!-- Ziertext (uppercase) -->
+<!-- Ziertext (Cormorant Garamond, UPPERCASE) -->
 <span class="font-decorative">LEADERSHIP</span>
 
-<!-- Buzzwords -->
+<!-- Buzzwords (Playfair Display SC) -->
 <span class="font-buzzword">Sales & Leadership</span>
+
+<!-- Legacy CI (Muli/Calibri Light) -->
+<span class="font-muli">Leichter Text</span>
+```
+
+### Farben
+
+```html
+<!-- CI Hauptfarben -->
+<div class="bg-ci-blue text-white">Grundfarbe</div>
+<div class="bg-ci-blue-light">Heller Hintergrund</div>
+<div class="bg-ci-blue-medium">Akzent</div>
+<div class="bg-ci-gray">Grauer Hintergrund</div>
+<div class="bg-ci-beige">Beiger Akzent</div>
+
+<!-- Instagram Thumbnail Farben -->
+<div class="bg-insta-bg text-insta-text">
+  <span class="text-insta-accent">Hervorgehobenes Keyword</span>
+</div>
+
+<!-- Text-Farben -->
+<p class="text-ci-blue">Blauer Text</p>
+<p class="text-ci-blue-medium">Mittelblauer Text</p>
+```
+
+### Komplette Komponenten-Beispiele
+
+```html
+<!-- Button Primary -->
+<button class="bg-ci-blue text-white font-heading px-6 py-3 rounded-lg hover:bg-ci-blue-medium transition">
+  Jetzt starten
+</button>
+
+<!-- Card -->
+<div class="bg-white border border-ci-gray rounded-lg p-6 shadow-sm">
+  <h2 class="font-heading text-2xl text-ci-blue mb-4">Überschrift</h2>
+  <p class="font-body text-gray-700">Dein Content hier...</p>
+</div>
+
+<!-- Hero Section -->
+<section class="bg-ci-blue-light py-20">
+  <div class="container mx-auto">
+    <h1 class="font-heading text-5xl text-ci-blue mb-4">
+      Sales & Leadership Coaching
+    </h1>
+    <p class="font-decorative text-2xl text-ci-blue-medium">
+      MIT LAURA KLIMECKI
+    </p>
+  </div>
+</section>
 ```
 
 ---
